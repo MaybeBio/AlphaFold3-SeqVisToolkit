@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "alphafold3-seqvis-toolkit"
+version = "0.1.0"
+description = "Visualization & analysis toolkit for AlphaFold3 outputs."
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [{name = "Joe Hoye Dow"}] 
+
+dependencies = [
+  "biopython>=1.79",
+  "numpy>=1.22",
+  "matplotlib>=3.6",
+  "seaborn>=0.12",   
+  "typer[all]>=0.9", 
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov", "build", "twine"]
+
+[project.scripts]
+af3-vis = "alphafold3_seqvis_toolkit.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/alphafold3_seqvis_toolkit"]
