@@ -2,11 +2,13 @@
 
 import json
 import os 
+import re
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from typing import Dict, Optional, Tuple
 import matplotlib.patches as mpatches
+from matplotlib.colors import ListedColormap
 
 
 # function to load JSON data from a file
@@ -72,7 +74,7 @@ def plot_global_confidence(confid_json_file_path, output_path):
     # print(f"Ranking Score: {ranking_score}")
     
     # write them to a tsv file
-    job_name = os.path.splitext(os.path.basename(confid_json_file_path))[0].split("_")[1]
+    job_name = re.match(r'fold_(.*)_summary_confidences_\d+\.json', os.path.basename(confid_json_file_path)).group(1) 
     with open(f"{output_path}/{job_name}_global_confidence_SCALAR_measures.tsv", "w") as f:
         f.write(f"Fraction Disordered\t{fraction_disordered}\n")
         f.write(f"Has Clash\t{has_clash}\n")
@@ -85,7 +87,7 @@ def plot_global_confidence(confid_json_file_path, output_path):
     def number_to_chain_idx(num):
         """Convert a chain index to a chain ID (A, B, C, ..., Z, AA, AB, ...)."""
         letter = ""
-        while num >= 0:
+        while num >= 0: 
             letter = chr(num % 26 + ord('A')) + letter
             num = num // 26 - 1
         return letter
@@ -269,7 +271,7 @@ def plot_local_confidence(full_json_file_path, output_path, chains: Optional[obj
             xticks_loc.append(index)
             xticks_labels.append(int(res))
 
-    job_name = os.path.splitext(os.path.basename(full_json_file_path))[0].split("_")[1]
+    job_name = re.match(r'fold_(.*)_full_data_\d+\.json', os.path.basename(full_json_file_path)).group(1) 
 
     # Cause PAE and contact_probs matrices are similar in plotting style and chain_id segmentation need, so we define a general plotting function here.
     def _plot_matrix_with_chain_bars(matrix, title, xlabel, ylabel, cbar_label,cmap_name, outfilename):
@@ -280,8 +282,9 @@ def plot_local_confidence(full_json_file_path, output_path, chains: Optional[obj
         ax.set_ylabel(ylabel, fontsize=10)
         ax.set_xticks(xticks_loc)
         ax.set_xticklabels(xticks_labels, fontsize=10)
-        ax.set_yticks(xticks_loc)
-        ax.set_yticklabels(xticks_labels, fontsize=10)
+        # ax.set_yticks(xticks_loc)
+        # ax.set_yticklabels(xticks_labels, fontsize=10)
+        ax.set_yticks([])
 
         # add colorbar
         cbar = fig.colorbar(im, ax=ax, fraction=0.045)
@@ -310,8 +313,13 @@ def plot_local_confidence(full_json_file_path, output_path, chains: Optional[obj
             chain_row = np.asarray([chain_to_int[chain_id] for chain_id in token_chain_ids_sub]).reshape(1, -1)
     
             # use pastel colors for the top/left chain bars and slightly transparent
-            # 10 coloars should be enough for most cases!
-            cmap = plt.get_cmap("tab10", len(unique_chains))
+            # 20 coloars should be enough for most cases!  
+            if len(unique_chains) <= 20:
+                cmap = plt.get_cmap("tab20", len(unique_chains))
+            else:
+            # Use gist_rainbow for >20 chains to ensure distinctness
+                colors = plt.get_cmap("gist_rainbow")(np.linspace(0, 1, len(unique_chains)))
+                cmap = ListedColormap(colors)
 
             ax_top.imshow(chain_row, cmap=cmap, aspect="auto", alpha=0.9)
             ax_top.set_xticks([])
@@ -444,7 +452,13 @@ def plot_local_confidence(full_json_file_path, output_path, chains: Optional[obj
             chain_to_int_atoms = {cid: i for i, cid in enumerate(unique_chains_atoms)}
             chain_row = np.asarray([chain_to_int_atoms[c] for c in atom_chain_ids_arr]).reshape(1, -1)
 
-        cmap = plt.get_cmap("tab10", len(unique_chains_atoms))
+        # Automatically generate colors based on number of chains
+        if len(unique_chains_atoms) <= 20:
+            cmap = plt.get_cmap("tab20", len(unique_chains_atoms))
+        else:
+            # use gist_rainbow for >20 chains to ensure distinctness
+            colors = plt.get_cmap("gist_rainbow")(np.linspace(0, 1, len(unique_chains_atoms)))
+            cmap = ListedColormap(colors)
 
         # top color bar
         divider = make_axes_locatable(ax)

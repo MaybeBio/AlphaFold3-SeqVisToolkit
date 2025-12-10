@@ -1,9 +1,10 @@
 import typer # For building CLI applications, command-line interfaces
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import os
 from alphafold3_seqvis_toolkit.modules.confidence_metrics_plot import plot_local_confidence, plot_global_confidence
 from alphafold3_seqvis_toolkit.modules.contact_map_comparison import contact_map_diff
-from alphafold3_seqvis_toolkit.modules.custom_metric_track import track_metrics
+from alphafold3_seqvis_toolkit.modules.contact_map_visualization_with_track import contact_map_vis_with_track
+from alphafold3_seqvis_toolkit.modules.contact_map_visualization_without_track import contact_map_vis_without_track
 
 app = typer.Typer(help="AlphaFold3 SeqVis Toolkit", no_args_is_help=True)
 
@@ -58,9 +59,6 @@ def confidence_cmd(
             chains=chains,
             tick_step=tick_step,
         )
-
-
-
 
 
 @app.command(
@@ -132,24 +130,83 @@ def contact_map_diff_cmd(
     )
 
 
+
 @app.command(
-    "track-metrics",
-    help="Aggregate metric JSON files in a folder into a single CSV (optional).",
-    no_args_is_help=True,
+    "contact-map-vis-Track",
+    no_args_is_help=True
 )
-def track_metrics_cmd(
-    folder: str = typer.Option(..., "--folder", help="Directory of prediction runs", rich_help_panel="Inputs"),
-    pattern: str = typer.Option("*.json", "--pattern", help="Glob pattern for metric files"),
-    out_csv: Optional[str] = typer.Option(None, "--out-csv", help="Write merged metrics to CSV", rich_help_panel="Output"),
+def contact_map_vis_with_track_cmd(
+    mmcif_file: str = typer.Option(..., "--mmcif-file", help="Path to mmCIF file", rich_help_panel="Input"),
+    chains: Optional[List[str]] = typer.Option(None, "--chains", "-c", help="Repeatable: chain IDs to include", rich_help_panel="Input"),
+    out_path: str = typer.Option(".", "--out-path", "-o", help="Directory for outputs", rich_help_panel="Output"),
+    track_bed_file: Optional[str] = typer.Option(None, "--track-bed-file", help="Path to BED file for custom tracks", rich_help_panel="Custom Tracks"),
+    color_config: Optional[str] = typer.Option("tab10", "--color-config", help="Path to color config file (JSON) or colormap name", rich_help_panel="Custom Tracks"),
 ):
     """
-    Scan a folder for metric JSON files and merge them for quick tracking.
+    Visualize contact map from an AlphaFold3 mmCIF structure or a general mmCIF structure with customizable feature annotation tracks.
+    
+    \b
+    Notes:
+    - 1, Designed for visualizing contact maps from AlphaFold3 mmCIF outputs or general mmCIF structures with customizable annotation tracks.
+    - 2, By default, all chains in the mmCIF file are included. Use --chains to specify particular chains if needed.
+    - 3, Custom annotation tracks can be added using a BED file format. Refer to the documentation for details on the required format.
+    And tracks can be numerical (line plot) or categorical (bar/strip plot).
+    - 4, A color configuration file can be provided to customize the colors of categorical tracks. Refer to the documentation for the required format.
+    - 5, The track bed file must be 0-based indexed! All residue indices in this module are 0-based logic driven.
+    - 6, If you do not need custom annotation tracks, please use contact-map-vis-noTrack command instead.
 
+    \b
     Examples:
-      af3-vis track-metrics --folder runs/ --pattern 'metrics*.json' --out-csv merged.csv
+    - 1, Basic contact map visualization:
+    af3-vis contact-map-vis --mmcif-file model.cif -o out_path
+    - 2, Contact map with custom annotation tracks (e.g., domains, IDRs):
+    af3-vis contact-map-vis \
+--mmcif-file model.cif \
+--track-bed-file custom_tracks.bed \
+--color-config color_config.json \
+-o out_path
+    
     """
-    data = track_metrics(folder=folder, pattern=pattern, out_csv=out_csv)
-    typer.echo(f"Loaded {len(data)} metric records.")
+
+    contact_map_vis_with_track(
+        mmcif_file=mmcif_file,
+        chains=chains,
+        out_path=out_path,
+        track_bed_file=track_bed_file,
+        color_config=color_config,
+    )
+
+
+@app.command(
+    "contact-map-vis-noTrack",
+    no_args_is_help=True
+)
+def contact_map_vis_without_track_cmd(
+    mmcif_file: str = typer.Option(..., "--mmcif-file", help="Path to mmCIF file", rich_help_panel="Input"),
+    chains: Optional[List[str]] = typer.Option(None, "--chains", "-c", help="Repeatable: chain IDs to include", rich_help_panel="Input"),
+    out_path: str = typer.Option(".", "--out-path", "-o", help="Directory for outputs", rich_help_panel="Output"),
+):
+    """
+    Visualize contact map from an AlphaFold3 mmCIF structure or a general mmCIF structure without feature annotation tracks.
+
+    \b
+    Notes:
+    - 1, Designed for visualizing contact maps from AlphaFold3 mmCIF outputs or general mmCIF structures without annotation tracks.
+    - 2, By default, all chains in the mmCIF file are included. Use --chains to specify particular chains if needed.
+    - 3, If you need custom annotation tracks, please use contact-map-vis-Track command instead.
+
+    \b
+    Examples:
+    - 1, Basic contact map visualization:
+    af3-vis contact-map-vis-noTrack --mmcif-file model.cif -o out_path
+
+    """
+
+    contact_map_vis_without_track(
+        mmcif_file=mmcif_file,
+        chains=chains,
+        out_path=out_path,
+    )
 
 if __name__ == "__main__":
     app()
