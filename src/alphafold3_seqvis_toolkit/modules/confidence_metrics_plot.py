@@ -350,13 +350,12 @@ def plot_local_confidence(full_json_file_path, output_path, chains: Optional[obj
                              fontsize=14, weight="bold", color="#222222", rotation=90)
                 
 
-            # save figure
-            sel_name = "_".join(selected_chains) if selected_chains else "all"
-            plt.savefig(f"{output_path}/{job_name}_{outfilename}_{sel_name}.pdf", bbox_inches='tight')
-            # also save as png, dpi 300
-            plt.savefig(f"{output_path}/{job_name}_{outfilename}_{sel_name}.png", bbox_inches='tight', dpi=300)
-            plt.close(fig)
-
+        # save figure
+        sel_name = "_".join(selected_chains) if selected_chains else "all"
+        plt.savefig(f"{output_path}/{job_name}_{outfilename}_{sel_name}.pdf", bbox_inches='tight')
+        # also save as png, dpi 300
+        plt.savefig(f"{output_path}/{job_name}_{outfilename}_{sel_name}.png", bbox_inches='tight', dpi=300)
+        plt.close(fig)
 
     # Now, we can directly use the above function to plot PAE matrix and contact probability matrix
     
@@ -456,35 +455,35 @@ def plot_local_confidence(full_json_file_path, output_path, chains: Optional[obj
             chain_to_int_atoms = {cid: i for i, cid in enumerate(unique_chains_atoms)}
             chain_row = np.asarray([chain_to_int_atoms[c] for c in atom_chain_ids_arr]).reshape(1, -1)
 
-        # Automatically generate colors based on number of chains
-        if len(unique_chains_atoms) <= 20:
-            cmap = plt.get_cmap("tab20", len(unique_chains_atoms))
-        else:
-            # use gist_rainbow for >20 chains to ensure distinctness
-            # set 0.1 to 0.9 to avoid too light/dark colors
-            colors = plt.get_cmap("gist_rainbow")(np.linspace(0.1, 0.9, len(unique_chains_atoms)))
-            cmap = ListedColormap(colors)
+            # Automatically generate colors based on number of chains
+            if len(unique_chains_atoms) <= 20:
+                cmap = plt.get_cmap("tab20", len(unique_chains_atoms))
+            else:
+                # use gist_rainbow for >20 chains to ensure distinctness
+                # set 0.1 to 0.9 to avoid too light/dark colors
+                colors = plt.get_cmap("gist_rainbow")(np.linspace(0.1, 0.9, len(unique_chains_atoms)))
+                cmap = ListedColormap(colors)
 
-        # top color bar
-        divider = make_axes_locatable(ax)
-        ax_top = divider.append_axes("top", size="8%", pad=0.03)
-        ax_top.imshow(chain_row, cmap=cmap, aspect="auto", alpha=0.95)
-        ax_top.set_xticks([])
-        ax_top.set_yticks([])
+            # top color bar
+            divider = make_axes_locatable(ax)
+            ax_top = divider.append_axes("top", size="8%", pad=0.03)
+            ax_top.imshow(chain_row, cmap=cmap, aspect="auto", alpha=0.95)
+            ax_top.set_xticks([])
+            ax_top.set_yticks([])
 
-        # draw dashed separations on main axis and top bar at block boundaries
-        for _, s, e in chain_blocks_atoms:
-            if s != 0:
-                sep = s - 0.5
-                ax.axvline(sep, color="k", linewidth=1, linestyle="--")
-                ax_top.axvline(sep, color="w", linewidth=1)
+            # draw dashed separations on main axis and top bar at block boundaries
+            for _, s, e in chain_blocks_atoms:
+                if s != 0:
+                    sep = s - 0.5
+                    ax.axvline(sep, color="k", linewidth=1, linestyle="--")
+                    ax_top.axvline(sep, color="w", linewidth=1)
 
-        # annotate chain ids centered on blocks
-        for cid, s, e in chain_blocks_atoms:
-            center = (s + e) / 2.0
-            ax_top.text(center, 0, str(cid), ha="center", va="center",
-                        fontsize=15, weight="bold", color="#222222")
-            
+            # annotate chain ids centered on blocks
+            for cid, s, e in chain_blocks_atoms:
+                center = (s + e) / 2.0
+                ax_top.text(center, 0, str(cid), ha="center", va="center",
+                            fontsize=15, weight="bold", color="#222222")
+                
         # save figure
         sel_name = "_".join(selected_chains) if selected_chains else "all"
         plt.savefig(f"{output_path}/{job_name}_{outfilename}_{sel_name}.pdf", bbox_inches='tight')

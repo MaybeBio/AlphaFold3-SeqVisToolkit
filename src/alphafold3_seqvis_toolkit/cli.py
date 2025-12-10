@@ -13,9 +13,9 @@ app = typer.Typer(help="AlphaFold3 SeqVis Toolkit", no_args_is_help=True)
     no_args_is_help=True
 )
 def confidence_cmd(
-    global_json: Optional[str] = typer.Option(None, "--global-json", help="fold_{YOUR-JOB-NAME}_summary_confidences_X.json", rich_help_panel="Input"),
-    full_json: Optional[str] = typer.Option(None, "--full-json", help="fold_{YOUR-JOB-NAME}_full_data_X.json", rich_help_panel="Input"),
-    output_path: str = typer.Option(".", "--output-path", "-o", help="Directory for outputs", rich_help_panel="Output"),
+    global_json: Optional[str] = typer.Option(..., "--global-json", help="fold_{YOUR-JOB-NAME}_summary_confidences_X.json", rich_help_panel="Input"),
+    full_json: Optional[str] = typer.Option(..., "--full-json", help="fold_{YOUR-JOB-NAME}_full_data_X.json", rich_help_panel="Input"),
+    output_path: str = typer.Option(".", "--output-path", "-o", help="Directory for outputs, default is current directory", rich_help_panel="Output"),
     chains: Optional[List[str]] = typer.Option(None, "--chains", "-c", help="Repeatable: chain IDs for local subset, this option only works when --full-json is set "
     "and is designed for plotting local metrics (like PAE, contact probs, or atom pLDDT) for specific chains. By default all chains are plotted.", rich_help_panel="Local Plot Options"),
     tick_step: int = typer.Option(100, "--tick-step", help="Residue tick step for local plots", rich_help_panel="Local Plot Options"),
@@ -69,7 +69,8 @@ def confidence_cmd(
 def contact_map_diff_cmd(
     mmcif_a: str = typer.Option(..., "--mmcif-a", help="Path to mmCIF file A", rich_help_panel="Inputs"),
     mmcif_b: str = typer.Option(..., "--mmcif-b", help="Path to mmCIF file B", rich_help_panel="Inputs"),
-
+    chain_a: Optional[str] = typer.Option(..., "--chain-a", help="Chain ID for mmCIF file A", rich_help_panel="Inputs"),
+    chain_b: Optional[str] = typer.Option(..., "--chain-b", help="Chain ID for mmCIF file B", rich_help_panel="Inputs"),
     region_1: Optional[str] = typer.Option(None, "--region-1", help="(Legacy) single region", rich_help_panel="Legacy"),
     region_2: Optional[str] = typer.Option(None, "--region-2", help="(Legacy) second region", rich_help_panel="Legacy"),
     region_pair: List[str] = typer.Option(None, "--region-pair", help="Repeatable region pair: 'a:b,c:d' or 'a-b,c-d'. Use multiple --region-pair to add more.", rich_help_panel="Regions"),
@@ -78,7 +79,7 @@ def contact_map_diff_cmd(
     vdiff: Optional[float] = typer.Option(None, help="Max abs value for diff heatmap (0-centered)", rich_help_panel="Color scaling"),
     vdiff_percentile: float = typer.Option(95.0, help="Percentile used if vdiff is not set", rich_help_panel="Color scaling"),
     include_nonstandard_residue: bool = typer.Option(False, "--include-nonstandard/--no-include-nonstandard", help="Include non-standard amino acid residues"),
-    out_file: Optional[str] = typer.Option(None, "--out-file", help="Save figure to file (png/pdf)", rich_help_panel="Output"),
+    out_path: Optional[str] = typer.Option(".", "--out-path", help="Directory to save figure files (png/pdf), default is current directory", rich_help_panel="Output"),
 ):
     """
     Compare contact maps between two AlphaFold3 mmCIF structures for the same protein sequence, and plot the distance/diff matrices.
@@ -96,12 +97,13 @@ def contact_map_diff_cmd(
     - 1, Basic diff on one region:
     af3-vis contact-map-diff \
 --mmcif-a A.cif --mmcif-b B.cif \
---region-1 0:200 --out-file diff.pdf
+--region-1 0:200 --chain-a A --chain-b A --out-path .
     - 2, Diff between two regions:
     af3-vis contact-map-diff \
 --mmcif-a A.cif --mmcif-b B.cif \
 --region-1 0-200 --region-2 300-500 \
---out-file diff.pdf
+--chain-a A --chain-b A \
+--out-path .
     - 3, Multiple region pairs: (RECOMMENDED IN ANY CASE!)
     af3-vis contact-map-diff \
 --mmcif-a A.cif --mmcif-b B.cif \
@@ -113,12 +115,15 @@ def contact_map_diff_cmd(
 --region-pair 265:576,578:589 \
 --region-pair 265:576,606:639 \
 --region-pair 265:576,691:720 \
---out-file diff.pdf
+--chain-a A --chain-b A \
+--out-path .
     """
     
     contact_map_diff(
         mmcif_file_a=mmcif_a,
         mmcif_file_b=mmcif_b,
+        chain_a=chain_a,
+        chain_b=chain_b,
         region_1=region_1,
         region_2=region_2,
         region_pairs=region_pair if region_pair else None,
@@ -127,7 +132,7 @@ def contact_map_diff_cmd(
         vdiff=vdiff,
         vdiff_percentile=vdiff_percentile,
         include_nonstandard_residue=include_nonstandard_residue,
-        out_file=out_file,
+        out_path=out_path,
     )
 
 
@@ -139,8 +144,8 @@ def contact_map_diff_cmd(
 def contact_map_vis_with_track_cmd(
     mmcif_file: str = typer.Option(..., "--mmcif-file", help="Path to mmCIF file", rich_help_panel="Input"),
     chains: Optional[List[str]] = typer.Option(None, "--chains", "-c", help="Repeatable: chain IDs to include", rich_help_panel="Input"),
-    out_path: str = typer.Option(".", "--out-path", "-o", help="Directory for outputs", rich_help_panel="Output"),
-    track_bed_file: Optional[str] = typer.Option(None, "--track-bed-file", help="Path to BED file for custom tracks", rich_help_panel="Custom Tracks"),
+    out_path: str = typer.Option(".", "--out-path", "-o", help="Directory for outputs, default is current directory", rich_help_panel="Output"),
+    track_bed_file: Optional[str] = typer.Option(..., "--track-bed-file", help="Path to BED file for custom tracks", rich_help_panel="Custom Tracks"),
     color_config: Optional[str] = typer.Option("tab10", "--color-config", help="Path to color config file (JSON) or colormap name", rich_help_panel="Custom Tracks"),
     tick_step: int = typer.Option(100, "--tick-step", help="Step size for ticks on the axes", rich_help_panel="Custom Tracks"),
 ):

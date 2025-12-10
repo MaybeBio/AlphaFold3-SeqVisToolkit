@@ -16,11 +16,14 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import TwoSlopeNorm
 from matplotlib.patches import Rectangle
 import os
+import re
 
 def contact_map_diff(
         mmcif_file_a: str,
         mmcif_file_b: str,
-        region_1: Union[Tuple[int, int], List[int], str],
+        chain_a: str,
+        chain_b: str,
+        region_1: Union[Tuple[int, int], List[int], str] = None,
         region_2: Optional[Union[Tuple[int, int], List[int], str]] = None,  
         region_pairs: Optional[Union[List[Tuple[Tuple[int, int], Tuple[int, int]]], List[str]]] = None,
         vmax : Optional[float] = None,
@@ -29,7 +32,7 @@ def contact_map_diff(
         vdiff_percentile: float = 95.0,
         include_nonstandard_residue: bool = False,
         return_maxtrix = False,
-        out_file: Optional[str] = None,
+        out_path: Optional[str] = None,
         cmap_dist = "RdBu", 
         cmap_diff = "seismic"
 ):
@@ -41,6 +44,8 @@ def contact_map_diff(
     Args
         mmcif_file_a (str): Path to the first mmcif file.
         mmcif_file_b (str): Path to the second mmcif file.
+        chain_a (str): Chain ID to include from the first mmcif file. We currently do not support None/all-chains option here. Please provide a specific chain ID.
+        chain_b (str): Chain ID to include from the second mmcif file. 
         region_1 (Tuple[int, int] | List[int, int]): 0-based Region of interest in the first structure (start, end) or list of residue indices.
             for example, (10, 50) or [10, 11, 12, ..., 50], or [10, 50]
         region_2 (Tuple[int, int] | List[int, int], optional): 0-based Region of interest in the second structure (start, end) or list of residue indices. Defaults to None, which means using region_1.
@@ -54,6 +59,7 @@ def contact_map_diff(
         return_maxtrix (bool): Whether to return the contact matrices of the selected regions and related information. Defaults to False.
         cmap_dist (str): Colormap for distance maps. Defaults to "RdBu".(red for close, blue for far)
         cmap_diff (str): Colormap for difference maps. Defaults to "seismic".(red for positive, blue for negative)
+        out_path (str, optional): Directory to save the output figure. 
 
     Returns
         None: Displays a 2x2 contact difference map.
@@ -66,12 +72,24 @@ def contact_map_diff(
     Format of regions_pair can be:
         - a, List of tuple of tuples: [ ((start1, end1), (start2, end2)), ... ]
         - b, List of strings: [ "start1:end1,start2:end2", ... ], ["start1-end1,start2-end2"]
+    - 4, We currently do not support None/all-chains option here. Please provide a specific chain ID.
     
     
     Todos:
     - 1, support input region format like region1xregion, like 10:50x100:150, so we can directly compare the diamond region between two domains.
     """
     
+    # first, we prepare output path
+    try:
+        # if it is a standard AF3 mmcif file
+        job_a = re.match(r'fold_(.*)_model_\d+\.cif', os.path.basename(mmcif_file_a)).group(1) 
+        job_b = re.match(r'fold_(.*)_model_\d+\.cif', os.path.basename(mmcif_file_b)).group(1)
+    except AttributeError:
+        # fallback to general naming in case it is not standard AF3 mmcif file
+        job_a = os.path.basename(mmcif_file_a).split(".")[0]
+        job_b = os.path.basename(mmcif_file_b).split(".")[0]
+    job_name = f"{job_a}_{'_'.join(chain_a)}_vs_{job_b}_{'_'.join(chain_b)}"
+
     # we need get the correct region index first
     # _parse_region for single region
     def _parse_region(r):
@@ -105,13 +123,27 @@ def contact_map_diff(
         return (r1, r2)
     
     # then, we load the result of structure prediction
-    # here, we only focus on CA atoms ! ! !
+    # Cause we generally only compare proteins, so here, we only focus on CA atoms ! ! !
+    # That means we choose CA atoms as the representative atom for each residue
+    # ⚠️ Of course, we can extend this further, choose C1' for nucleotides, Atom 1 for ligands, etc. And we can compare different types of molecules before and after some treatments.
     # And note that each residue should have only one CA atom, so we can directly use residue index to access CA atom
-    def _load_ca(mmcif_file, include_nonstandard_residue=False, model_index=0):
+    # For loading representative atoms from mmcif file for different molecule types, please refer to the module: contact_map_vis_no/Track.py
+    def _load_ca(mmcif_file, target_chain=None,include_nonstandard_residue=False, model_index=0):
         """
+        Description
+        -----------
+            Load CA atom coordinates and related info from a mmcif file.
+
+        Args
+        ----
         mmcif_file: str, path to the mmcif file
+        target_chain: str or None, chain ID to include. If None, all chains are included.
         include_nonstandard_residue: bool, whether to include non-standard residues like MSE
         model_index: int, index of the model to load (default: 0)
+
+        Notes
+        -----
+        - 1, For loading representative atoms from mmcif file for different molecule types, please refer to the module: contact_map_vis_no/Track.py
         """
         
         # for af3, we generally need only the first model, that is model_0
@@ -126,6 +158,9 @@ def contact_map_diff(
 
         ca_coords, ca_info = [], []
         for chain in model: 
+            # filter by target_chain if provided
+            if target_chain and chain.id != target_chain:
+                continue
             for res in chain:
                 hetfield, resseq, icode = res.id # or .get_id()
                 if hetfield != " ":
@@ -166,8 +201,8 @@ def contact_map_diff(
         return np.sqrt(np.sum(diff * diff, axis=-1))
     
     # load ca coordinates and info from mmcif files
-    ca_coords_a, ca_info_a = _load_ca(mmcif_file_a, include_nonstandard_residue=include_nonstandard_residue)
-    ca_coords_b, ca_info_b = _load_ca(mmcif_file_b, include_nonstandard_residue=include_nonstandard_residue)
+    ca_coords_a, ca_info_a = _load_ca(mmcif_file_a, target_chain=chain_a, include_nonstandard_residue=include_nonstandard_residue)
+    ca_coords_b, ca_info_b = _load_ca(mmcif_file_b, target_chain=chain_b, include_nonstandard_residue=include_nonstandard_residue)
     # calculate the shape of each protein structure
     # cause we are evaluateing the same protein sequence, so Na should be equal to Nb
     Na, Nb = ca_coords_a.shape[0], ca_coords_b.shape[0]
@@ -242,8 +277,12 @@ def contact_map_diff(
         interpolation="nearest",
         origin="upper"
     )
-    axes[0,0].set_title(f"A:{os.path.splitext(os.path.basename(mmcif_file_a))[0].split('_')[1]}")
-    
+    # Update titles to show Chain ID
+    # axes[0,0].set_title(f"A:{os.path.splitext(os.path.basename(mmcif_file_a))[0].split('_')[1]}")
+    title_a = f"A: {job_a}"
+    if chain_a: title_a += f" (Chain {chain_a})"
+    axes[0,0].set_title(title_a)
+
     # plot distance map of structure 2, protein marked as B/2
     # B/2
     imB = axes[0,1].imshow(
@@ -254,8 +293,10 @@ def contact_map_diff(
         interpolation="nearest",
         origin="upper"
     )
-    axes[0,1].set_title(f"B:{os.path.splitext(os.path.basename(mmcif_file_b))[0].split('_')[1]}")
-    
+    # axes[0,1].set_title(f"B:{os.path.splitext(os.path.basename(mmcif_file_b))[0].split('_')[1]}")
+    title_b = f"B: {job_b}"
+    if chain_b: title_b += f" (Chain {chain_b})"
+    axes[0,1].set_title(title_b)
 
     # plot distance difference map of structure 1 - structure 2, marked as A-B/1-2
     # A-B/1-2
@@ -270,7 +311,7 @@ def contact_map_diff(
         interpolation="nearest",
         origin="upper"
     )
-    axes[1,0].set_title("A - B (Red = closer, blue = farther)")
+    axes[1,0].set_title("A - B (A->B: Red = closer, blue = farther)")
 
     # plot distance difference map of structure 2 - structure 1, marked as B-A/2-1
     # B-A/2-1
@@ -281,7 +322,7 @@ def contact_map_diff(
         interpolation="nearest",
         origin="upper"
     )
-    axes[1,1].set_title("B - A (Red = closer, blue = farther)")
+    axes[1,1].set_title("B - A (B->A: Red = closer, blue = farther)")
 
 
     # The following annotated function is used to draw the starting and ending points of a region on the axis
@@ -339,8 +380,8 @@ def contact_map_diff(
         ax.set_xlim(0, N-1)
         ax.set_ylim(N-1, 0)
         # set labels , note that residue index is 0-based here
-        ax.set_xlabel("Residue index (0-based)")
-        ax.set_ylabel("Residue index (0-based)")
+        ax.set_xlabel("Residue index")
+        ax.set_ylabel("Residue index")
 
     # color bars are shared between subplots in the same row, cause we are comparing the same protein in structure1 and structure2
     cbar_top = fig.colorbar(imA, ax=[axes[0,0], axes[0,1]], fraction=0.046, pad=0.02)
@@ -350,8 +391,13 @@ def contact_map_diff(
 
     # save the figure in pdf format
     # or we can save it in png format if needed, set dpi=300 or higher
-    if out_file:
-        plt.savefig(out_file, bbox_inches='tight')
+    if out_path:
+        # save figure
+        sel_name = "_".join(region_pairs) if region_pairs else f"{region_1}" if region_2 is None else f"{region_1}_vs_{region_2}"
+        plt.savefig(f"{out_path}/{job_name}_{sel_name}.pdf", bbox_inches='tight')
+        # also save as png, dpi 300
+        plt.savefig(f"{out_path}/{job_name}_{sel_name}.png", bbox_inches='tight', dpi=300)
+        plt.close(fig)
 
     
     # return the contact matrices if needed
