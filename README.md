@@ -166,13 +166,14 @@ For the demonstration of results, please refer to [Test case4](#-case-4-visualiz
 
 ⚠️ Note: This module is AlphaFold3-INDEPENDENT
 
-### 5, PyMOL extension to color AlphaFold structures by confidence (pLDDT)
+### 5, PyMOL extensions/plugins for Visualization
 
 For open source Pymol installations, please refer to https://github.com/schrodinger/pymol-open-source
+#### 1️⃣PyMOL extension to color AlphaFold structures by confidence (pLDDT)
 
-Colors definition see Module 1 above.
+Test case see [Test Case2](#-case-2-visualizing-structural-confidence-of-molecules-in-pymol), and Colors definition see Module 1 above.
 
-
+#### 2️⃣A PyMOL plugin to visualize interface residues is coming soon !
 
 ## How to install it ?
 
@@ -340,7 +341,7 @@ N	74.75	77.10	10.78	0.00	0.63	0.37	0.00
 How can I visualize and check the confidence score of each specific structural region in PyMOL?
 
 **✅ The Solution:**
-Run the ./utils/af3_plddt_color.py script:
+Run the ./pymol_utils/af3_plddt_color.py script:
 
 1. Load YOUR prediction output file into pymol. In the pymol command prompt:
 ```bash
