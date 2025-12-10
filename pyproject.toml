@@ -4,19 +4,21 @@ build-backend = "hatchling.build"
 
 [project]
 name = "alphafold3-seqvis-toolkit"
-version = "0.1.0"
+version = "0.2.0"
 description = "Visualization & analysis toolkit for AlphaFold3 outputs."
 readme = "README.md"
 requires-python = ">=3.9"
-license = {text = "MIT"}
+license = "MIT"
 authors = [{name = "Joe Hoye Dow"}] 
 
+# use pip show to check
 dependencies = [
-  "biopython>=1.79",
-  "numpy>=1.22",
-  "matplotlib>=3.6",
-  "seaborn>=0.12",   
-  "typer[all]>=0.9", 
+  "biopython>=1.85",
+  "numpy>=2.2.0",
+  "matplotlib>=3.10.7",
+  "seaborn>=0.13.2",   
+  "typer>=0.20.0", 
+  "pandas>=2.3.1"
 ]
 
 [project.optional-dependencies]
