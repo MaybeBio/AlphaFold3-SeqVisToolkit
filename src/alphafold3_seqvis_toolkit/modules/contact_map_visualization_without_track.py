@@ -12,6 +12,7 @@ def contact_map_vis_without_track(
     chains: Optional[Union[str, List[str]]] = None,
     out_path: Optional[str] = None,
     cmap: str = "RdBu", # Reversed RdBu_r so Red is close (contact), Blue is far
+    tick_step: int = 100
 ):
     """
     Description
@@ -27,6 +28,7 @@ def contact_map_vis_without_track(
                                             If None, all chains are included.
         out_path (str, optional): Path to save the output plot (e.g., "/data2").
         cmap (str): Colormap to use. Default is "RdBu" (Red=Close, Blue=Far).
+        tick_step (int): Step size for ticks on the axes. Default is 100.
     
     Notes
     ------
@@ -49,7 +51,8 @@ def contact_map_vis_without_track(
 
         coords = []
         chain_labels = [] 
-        res_types = [] # Track type for info              
+        res_types = [] # Track type for info    
+        res_ids = [] # Store residue IDs for tick labeling          
         
         # Normalize target_chains
         if isinstance(target_chains, str):
@@ -101,6 +104,7 @@ def contact_map_vis_without_track(
                     coords.append(rep_atom.get_coord())
                     chain_labels.append(chain.id)
                     res_types.append(rtype)
+                    res_ids.append(res.id[1]) # Capture 1-based residue ID
                     found_chains.add(chain.id)
 
         if not coords:
@@ -108,10 +112,11 @@ def contact_map_vis_without_track(
             if target_chains: msg += f" (Searched for chains: {target_chains})"
             raise ValueError(msg)
 
-        return np.array(coords, dtype=np.float32), chain_labels, sorted(list(found_chains))
+        return np.array(coords, dtype=np.float32), chain_labels, res_ids, sorted(list(found_chains))
 
     # 1. Load Data
-    coords, chain_labels, loaded_chains = _load_representative_atoms(mmcif_file, chains)
+    # ⚠️ Note that res_ids are 1-based residue numbers from the mmCIF file
+    coords, chain_labels, res_ids, loaded_chains = _load_representative_atoms(mmcif_file, chains)
     N = coords.shape[0] # number of tokens/representative atoms/residues
     print(f"Loaded {N} tokens from chains: {loaded_chains}")
 
@@ -122,6 +127,24 @@ def contact_map_vis_without_track(
 
     # 3. Plotting
     fig, ax = plt.subplots(figsize=(15, 12))
+
+    # Calculate Ticks Logic (Same as in with_track module)
+    # we parametrize tick_step for flexibility
+    # tick_step = 100 # Show tick every 100 residues
+    xticks_loc = []
+    xticks_labels = []
+
+    for i, (r_id, c_id) in enumerate(zip(res_ids, chain_labels)):
+        # Check if it is the start of a new chain
+        is_chain_start = (i == 0) or (chain_labels[i] != chain_labels[i-1])
+        
+        # Convert to 0-based index (PDB is 1-based)
+        r_id_0b = r_id - 1
+
+        # Add tick if it's chain start or a multiple of tick_step
+        if is_chain_start or (r_id_0b % tick_step == 0):
+            xticks_loc.append(i)
+            xticks_labels.append(str(r_id_0b))
     
     im = ax.imshow(
         dist_matrix,
@@ -136,10 +159,14 @@ def contact_map_vis_without_track(
     
     # Append axes to the top and left for chain bars
     ax_top = divider.append_axes("top", size="5%", pad=0.03)
-    ax_left = divider.append_axes("left", size="5%", pad=0.03)
+    ax_left = divider.append_axes("left", size="5%", pad=0.03) 
     
     # Append axes for colorbar to the right
     cax = divider.append_axes("right", size="5%", pad=0.1)
+    
+    # Apply Ticks to Main Heatmap
+    ax.set_xticks(xticks_loc)
+    ax.set_xticklabels(xticks_labels, fontsize=8, rotation=0)
     
     # Add Colorbar
     cbar = fig.colorbar(im, cax=cax)

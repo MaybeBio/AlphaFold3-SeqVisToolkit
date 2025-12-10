@@ -31,7 +31,8 @@ def confidence_cmd(
         - b, when you want to focus on specific chains in a multi-chain complex ———— this is specifically designed for visualizing PAE/contact/atom pLDDT for selected chains.
         - c, by default (if --chains is not set), all chains are plotted for local metrics.
     - 3, There may be NULL values in the above metrics produced by AlphaFold3, so we will convert them to NaN (these values may appear as NA when output, and this handling also applies to plotting). Therefore, if you are confused about the output, it is recommended to first check your original data.
-        
+    - 4, All residue indices in this module are 0-based logic driven.    
+    
     \b
     Examples:
     - 1, Only plot global metrics:
@@ -141,6 +142,7 @@ def contact_map_vis_with_track_cmd(
     out_path: str = typer.Option(".", "--out-path", "-o", help="Directory for outputs", rich_help_panel="Output"),
     track_bed_file: Optional[str] = typer.Option(None, "--track-bed-file", help="Path to BED file for custom tracks", rich_help_panel="Custom Tracks"),
     color_config: Optional[str] = typer.Option("tab10", "--color-config", help="Path to color config file (JSON) or colormap name", rich_help_panel="Custom Tracks"),
+    tick_step: int = typer.Option(100, "--tick-step", help="Step size for ticks on the axes", rich_help_panel="Custom Tracks"),
 ):
     """
     Visualize contact map from an AlphaFold3 mmCIF structure or a general mmCIF structure with customizable feature annotation tracks.
@@ -154,6 +156,7 @@ def contact_map_vis_with_track_cmd(
     - 4, A color configuration file can be provided to customize the colors of categorical tracks. Refer to the documentation for the required format.
     - 5, The track bed file must be 0-based indexed! All residue indices in this module are 0-based logic driven.
     - 6, If you do not need custom annotation tracks, please use contact-map-vis-noTrack command instead.
+    - 7, Modify the tick_step parameter to adjust the spacing of residue ticks on the axes as needed.
 
     \b
     Examples:
@@ -174,6 +177,7 @@ def contact_map_vis_with_track_cmd(
         out_path=out_path,
         track_bed_file=track_bed_file,
         color_config=color_config,
+        tick_step=tick_step,
     )
 
 
@@ -185,6 +189,7 @@ def contact_map_vis_without_track_cmd(
     mmcif_file: str = typer.Option(..., "--mmcif-file", help="Path to mmCIF file", rich_help_panel="Input"),
     chains: Optional[List[str]] = typer.Option(None, "--chains", "-c", help="Repeatable: chain IDs to include", rich_help_panel="Input"),
     out_path: str = typer.Option(".", "--out-path", "-o", help="Directory for outputs", rich_help_panel="Output"),
+    tick_step: int = typer.Option(100, "--tick-step", help="Step size for ticks on the axes", rich_help_panel="Custom Tracks"),
 ):
     """
     Visualize contact map from an AlphaFold3 mmCIF structure or a general mmCIF structure without feature annotation tracks.
@@ -194,6 +199,7 @@ def contact_map_vis_without_track_cmd(
     - 1, Designed for visualizing contact maps from AlphaFold3 mmCIF outputs or general mmCIF structures without annotation tracks.
     - 2, By default, all chains in the mmCIF file are included. Use --chains to specify particular chains if needed.
     - 3, If you need custom annotation tracks, please use contact-map-vis-Track command instead.
+    - 4, Modify the tick_step parameter to adjust the spacing of residue ticks on the axes as needed.
 
     \b
     Examples:
@@ -206,6 +212,7 @@ def contact_map_vis_without_track_cmd(
         mmcif_file=mmcif_file,
         chains=chains,
         out_path=out_path,
+        tick_step=tick_step,
     )
 
 if __name__ == "__main__":

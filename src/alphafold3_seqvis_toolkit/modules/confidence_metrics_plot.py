@@ -267,9 +267,12 @@ def plot_local_confidence(full_json_file_path, output_path, chains: Optional[obj
     for index, res in enumerate(token_res_ids_sub):
         # Note that index is the index in the sub-matrix, while res is the residue id
         # for example, index 728 in submatrix may correspond to residue 1 in chain B
-        if res == 1 or (tick_step and res % tick_step == 0):
+        
+        # ⚠️ Note that res is 1-based residue id, so we convert it to 0-based for tick logic
+        res_0b = res - 1
+        if res == 1 or (tick_step and res_0b % tick_step == 0):
             xticks_loc.append(index)
-            xticks_labels.append(int(res))
+            xticks_labels.append(int(res_0b))
 
     job_name = re.match(r'fold_(.*)_full_data_\d+\.json', os.path.basename(full_json_file_path)).group(1) 
 
@@ -318,7 +321,8 @@ def plot_local_confidence(full_json_file_path, output_path, chains: Optional[obj
                 cmap = plt.get_cmap("tab20", len(unique_chains))
             else:
             # Use gist_rainbow for >20 chains to ensure distinctness
-                colors = plt.get_cmap("gist_rainbow")(np.linspace(0, 1, len(unique_chains)))
+            # set 0.1 to 0.9 to avoid too light/dark colors            
+                colors = plt.get_cmap("gist_rainbow")(np.linspace(0.1, 0.9, len(unique_chains)))
                 cmap = ListedColormap(colors)
 
             ax_top.imshow(chain_row, cmap=cmap, aspect="auto", alpha=0.9)
@@ -457,7 +461,8 @@ def plot_local_confidence(full_json_file_path, output_path, chains: Optional[obj
             cmap = plt.get_cmap("tab20", len(unique_chains_atoms))
         else:
             # use gist_rainbow for >20 chains to ensure distinctness
-            colors = plt.get_cmap("gist_rainbow")(np.linspace(0, 1, len(unique_chains_atoms)))
+            # set 0.1 to 0.9 to avoid too light/dark colors
+            colors = plt.get_cmap("gist_rainbow")(np.linspace(0.1, 0.9, len(unique_chains_atoms)))
             cmap = ListedColormap(colors)
 
         # top color bar

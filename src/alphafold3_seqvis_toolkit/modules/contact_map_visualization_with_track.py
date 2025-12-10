@@ -20,6 +20,7 @@ def contact_map_vis_with_track(
     cmap: str = "RdBu", # Set RdBu so Red is close (contact), Blue is far, or coolwarm_r
     track_bed_file: Optional[str] = None,
     color_config: Optional[str] = "tab10",
+    tick_step: int = 100
 ):
     """
     Description
@@ -43,6 +44,7 @@ def contact_map_vis_with_track(
               e.g. {"IDR": "red", "Domain": {"DomainA": "blue", "DomainB": "green"}}
               or {"IDR": "red", "Domain": "tab10"}
         Anyway, we will input something whose format like above to parameter color in parse_bed_to_track_data() function in track_utils.py.
+        tick_step (int): Step size for ticks on the axes. Default is 100.
     
     Notes
     ------
@@ -288,7 +290,8 @@ def contact_map_vis_with_track(
 
     # --- Calculate Ticks (⚠️) ---
     # Logic similar to confidence_metrics_plot.py
-    tick_step = 100 # Show tick every 100 residues
+    # we parametrize tick_step for flexibility
+    # tick_step = 100 # Show tick every 100 residues
     xticks_loc = []
     xticks_labels = []
     
