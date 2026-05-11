@@ -197,11 +197,23 @@ Test case see [Test Case2](#-case-2-visualizing-structural-confidence-of-molecul
 
 ## How to install it ?
 
-## Install (dev)
+### 🌟 Recommended: Install via PyPI
+
+The easiest way to install the toolkit is via `pip`. This will install the latest stable release:
+
+```bash 
+pip install alphafold3-seqvis-toolkit
+```
+
+### 🛠️ Alternative: Install from Source (For Developers)
+If you want to use the latest, unreleased features directly from the main branch, or if you want to modify the code yourself, you can install it from source:
 
 ```bash
+# Clone the repository
 git clone https://github.com/MaybeBio/AlphaFold3-SeqVisToolkit.git
 cd AlphaFold3-SeqVisToolkit
+
+# Install in editable mode
 pip install -e .
 ```
 
