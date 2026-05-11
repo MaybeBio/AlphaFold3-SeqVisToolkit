@@ -1,7 +1,17 @@
 # AlphaFold3 SeqVis Toolkit
 
- ![MIT License](https://img.shields.io/badge/license-MIT-brightgreen.svg) 
- [![PR's Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](http://makeapullrequest.com) 
+
+[![GitHub stars](https://img.shields.io/github/stars/MaybeBio/AlphaFold3-SeqVisToolkit.svg?style=social&label=Star)](https://github.com/MaybeBio/AlphaFold3-SeqVisToolkit/stargazers/)
+[![GitHub forks](https://img.shields.io/github/forks/MaybeBio/AlphaFold3-SeqVisToolkit.svg?style=social&label=Fork)](https://github.com/MaybeBio/AlphaFold3-SeqVisToolkit/network/)
+[![GitHub issues](https://img.shields.io/github/issues/MaybeBio/AlphaFold3-SeqVisToolkit.svg)](https://github.com/MaybeBio/AlphaFold3-SeqVisToolkit/issues)
+[![PR's Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](http://makeapullrequest.com) 
+
+
+[![PyPI version](https://img.shields.io/pypi/v/alphafold3-seqvis-toolkit.svg?logo=pypi&logoColor=white)](https://pypi.org/project/alphafold3-seqvis-toolkit/)
+[![Python Versions](https://img.shields.io/pypi/pyversions/alphafold3-seqvis-toolkit.svg?logo=python&logoColor=white)](https://pypi.org/project/alphafold3-seqvis-toolkit/)
+[![Downloads](https://static.pepy.tech/badge/alphafold3-seqvis-toolkit)](https://pepy.tech/project/alphafold3-seqvis-toolkit)
+
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) 
 
 A lightweight toolkit for visualizing and analyzing AlphaFold3 prediction outputs.
 

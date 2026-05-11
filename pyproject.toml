@@ -4,12 +4,27 @@ build-backend = "hatchling.build"
 
 [project]
 name = "alphafold3-seqvis-toolkit"
-version = "0.2.0"
+dynamic = ["version"] # v0.2.1
+authors = [
+  {name = "Joe Hoye Dow", email = "luxunisgod123@gmail.com"}
+  ] 
 description = "Visualization & analysis toolkit for AlphaFold3 outputs."
 readme = "README.md"
 requires-python = ">=3.9"
-license = "MIT"
-authors = [{name = "Joe Hoye Dow"}] 
+license = { file = "LICENSE" }
+license-files = ["LICENSE"]
+keywords = ["alphafold3", "bioinformatics", "visualization", "protein-structure", "contact-map"]
+
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: OS Independent",
+  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
+]
+
 
 # use pip show to check
 dependencies = [
@@ -21,6 +36,10 @@ dependencies = [
   "pandas>=2.3.1"
 ]
 
+[project.urls]
+Homepage = "https://github.com/MaybeBio/AlphaFold3-SeqVisToolkit"
+Issues = "https://github.com/MaybeBio/AlphaFold3-SeqVisToolkit/issues"
+
 [project.optional-dependencies]
 dev = ["pytest", "pytest-cov", "build", "twine"]
 
@@ -29,3 +48,7 @@ af3-vis = "alphafold3_seqvis_toolkit.cli:app"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/alphafold3_seqvis_toolkit"]
+
+[tool.hatch.version]
+# modify version information here
+path = "src/alphafold3_seqvis_toolkit/__init__.py"
