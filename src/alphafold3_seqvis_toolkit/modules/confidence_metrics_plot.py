@@ -60,7 +60,7 @@ def plot_global_confidence(confid_json_file_path, output_path):
     fraction_disordered = global_confidence['fraction_disordered'] # scalar 
     has_clash = global_confidence['has_clash'] # boolean
     iptm = global_confidence['iptm'] # scalar
-    num_recycles = global_confidence['num_recycles'] # scalar
+    # num_recycles = global_confidence['num_recycles'] # scalar
     ptm = global_confidence['ptm'] # scalar
     ranking_score = global_confidence['ranking_score'] # scalar
 
@@ -79,7 +79,7 @@ def plot_global_confidence(confid_json_file_path, output_path):
         f.write(f"Fraction Disordered\t{fraction_disordered}\n")
         f.write(f"Has Clash\t{has_clash}\n")
         f.write(f"ipTM\t{iptm}\n")
-        f.write(f"Number of Recycles\t{num_recycles}\n")
+        # f.write(f"Number of Recycles\t{num_recycles}\n")
         f.write(f"pTM\t{ptm}\n")
         f.write(f"Ranking Score\t{ranking_score}\n")
 
